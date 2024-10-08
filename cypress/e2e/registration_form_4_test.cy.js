@@ -59,7 +59,7 @@ describe('Input fields', () => {
         // Check list size is 4
         cy.get('#cars').children().should('have.length', 4)
 
-        // Check list does not contain BMW (shortened for convenience)
+        // Check list does not contain BMW
         cy.get('#cars option').each(($el) => {
             cy.wrap($el).should('not.have.text', 'BMW')
         })
