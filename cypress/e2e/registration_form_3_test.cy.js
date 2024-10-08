@@ -215,4 +215,4 @@ describe('Functional Tests for Registration Form 3', () => {
         // Now the submit button should be enabled
         cy.get('.submit_button').should('not.be.disabled');
     });
-})//TEST
+})
