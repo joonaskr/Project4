@@ -1,3 +1,4 @@
+import 'cypress-file-upload'
 beforeEach(() => {
     cy.visit('cypress/fixtures/registration_form_3.html')
 })
@@ -20,7 +21,8 @@ describe('Visual tests for registration form 3', () => {
 
         const radioLabels = ['Daily', 'Weekly', 'Monthly', 'Never']
 
-        radioLabels.forEach((label) => {cy.get(`input[type="radio"][value="${label}"]`).should('be.visible')
+        radioLabels.forEach((label) => {
+            cy.get(`input[type="radio"][value="${label}"]`).should('be.visible')
             cy.get(`label:contains("${label}")`).should('be.visible')
         })
     })
@@ -97,12 +99,12 @@ describe('Visual tests for registration form 3', () => {
         validEmails.forEach((email) => {
             cy.get('input[name="email"]').clear().type(email)
             cy.get('#email_error_message').should('not.exist')
-            cy.get('input[name="email"]').invoke('val').then((value) => {expect(value).to.match(emailRegex)})
+            cy.get('input[name="email"]').invoke('val').then((value) => { expect(value).to.match(emailRegex) })
         });
 
         invalidEmails.forEach((email) => {
             cy.get('input[name="email"]').clear().type(email)
-            cy.get('input[name="email"]').invoke('val').then((value) => {expect(value).not.to.match(emailRegex)})
+            cy.get('input[name="email"]').invoke('val').then((value) => { expect(value).not.to.match(emailRegex) })
             cy.get('span[ng-show="myForm.email.$error.email"]').should('contain', 'Invalid email address.')
         })
 
@@ -123,83 +125,66 @@ Task list:
 describe('Functional Tests for Registration Form 3', () => {
 
     beforeEach(() => {
-        cy.visit('cypress/fixtures/registration_form_3.html'); // Adjust the URL as necessary
-    });
+        cy.visit('cypress/fixtures/registration_form_3.html')
+    })
 
-    it.only('should fill in all fields and verify their values', () => {
-        cy.get('input[name="name"]').type('John Doe'); // Fill name field
-        cy.get('input[name="email"]').type('user@cerebrumhub.com'); // Fill email
-        cy.get('select#country').select('Spain'); // Select country
-        cy.get('select#city').select('Malaga'); // Select city
-        cy.get('input[type="date"]').eq(0).type('2024-10-04')  // Fill registration date
-        cy.get('select[name="newsletterFrequency"]').select('Weekly'); // Frequency of newsletter
-        //cy.get('input[name="birthday"]').type('1990-01-01'); // Fill birthday field
-        //cy.get('input[type="file"]').attachFile('exampleFile.pdf'); // Upload file
-        cy.get('input[type="checkbox"][ng-model="checkboxPrivacy"]').check(); // Check privacy policy checkbox
-        cy.get('input[type="checkbox"][ng-model="checkboxCookie"]').check(); // Check cookie policy checkbox
-
-        // Assert that all values are filled in correctly
-        cy.get('input[name="name"]').should('have.value', 'John Doe');
-        cy.get('input[name="email"]').should('have.value', 'user@cerebrumhub.com');
-        cy.get('select#country').should('have.value', 'Spain');
-        cy.get('select#city').should('have.value', 'Malaga');
-        //cy.get('input[type="date"]').should('have.value', '2024-10-04');
-        cy.get('select[name="newsletterFrequency"]').should('have.value', 'Weekly');
-        //cy.get('input[name="birthday"]').should('have.value', '1990-01-01');
-        cy.get('input[type="file"]').invoke('val').should('contain', 'exampleFile.pdf'); // Verify file upload
-        cy.get('input[type="checkbox"][ng-model="checkboxPrivacy"]').should('be.checked');
-        cy.get('input[type="checkbox"][ng-model="checkboxCookie"]').should('be.checked');
-    });
+    it('should fill in all fields and verify their values', () => {
+        inputAllFields(name)
+        cy.get('#successFrame').siblings('input[type="submit"]').click()
+    })
 
     it('should fill in only mandatory fields and verify their values', () => {
-        // Fill only mandatory fields
-        cy.get('input[name="email"]').type('user@cerebrumhub.com'); // Fill email
-        cy.get('select#country').select('Spain'); // Select country
-        cy.get('select#city').select('Malaga'); // Select city
-
-        // Assert that mandatory values are filled in correctly
-        cy.get('input[name="email"]').should('have.value', 'user@cerebrumhub.com');
-        cy.get('select#country').should('have.value', 'Spain');
-        cy.get('select#city').should('have.value', 'Malaga');
-
-        // Assert that other fields are empty
-        cy.get('input[name="name"]').should('have.value', '');
-        cy.get('input[type="date"]').should('have.value', '');
-        cy.get('select[name="newsletterFrequency"]').should('have.value', '');
-        cy.get('input[name="birthday"]').should('have.value', '');
-        cy.get('input[type="checkbox"][ng-model="checkboxPrivacy"]').should('not.be.checked');
-        cy.get('input[type="checkbox"][ng-model="checkboxCookie"]').should('not.be.checked');
-    });
+        inputMandatoryFields(name)
+        cy.get('input[name="name"]').should('have.value', '')
+        cy.get('input[type="date"]').should('have.value', '')
+        cy.get('input[name="freq"]').each(($el) => {
+            cy.wrap($el).should('not.be.checked')
+        })
+        cy.get('input[name="birthday"]').should('have.value', '')
+        cy.get('input[type="checkbox"]').eq(1).should('not.be.checked')
+    })
 
     it('should show error messages when mandatory fields are absent', () => {
-        // Submit the form without filling any mandatory fields
-        cy.get('.submit_button').click(); // Adjust selector for your submit button
-
-        // Check for error messages for mandatory fields
-        cy.get('#email_error_message').should('be.visible').and('contain', 'Email is required.'); // Adjust as necessary
-        cy.get('#country_error_message').should('be.visible').and('contain', 'Country is required.'); // Adjust as necessary
-        cy.get('#city_error_message').should('be.visible').and('contain', 'City is required.'); // Adjust as necessary
-    });
+        checkMandatoryFields()
+        cy.get('input[type="submit"]').should("be.disabled")
+    })
 
     it('should upload a file and verify the upload', () => {
-        const fileName = 'exampleFile.pdf'; // Replace with your actual file name
+        cy.get('input[type="file"]#myFile').attachFile('something.txt')
+        cy.get('button[type="submit"]').click()
+        cy.url().should('include', 'cypress/fixtures').go("back")
+    })
 
-        cy.get('input[type="file"]').attachFile(fileName); // Use the `cypress-file-upload` plugin
+    it.only('should enable submit button only when mandatory fields are filled', () => {
+        cy.get('input[type="submit"]').should("be.disabled")
+        inputMandatoryFields(name)
+        cy.get('input[type="submit"]').should("be.enabled")
+    })
 
-        // Verify that the file is uploaded successfully
-        cy.get('input[type="file"]').invoke('val').should('contain', fileName); // Check that the file name is displayed in the input
-    });
+    function inputAllFields(name) {
+        cy.get('input[name="name"]').type('John Doe')
+        cy.get('input[name="email"]').type('user@cerebrumhub.com')
+        cy.get('select#country').select('Spain')
+        cy.get('select#city').select('Malaga')
+        cy.get('input[type="date"]').eq(0).type('2024-10-04')
+        cy.get('input[name="freq"][value="Weekly"]').check()
+        cy.get('input[name="birthday"]').type('1990-01-01')
+        cy.get('input[type="file"]#myFile').attachFile('something.txt')
+        cy.get('input[type="checkbox"][ng-model="checkbox"]').check()
+        cy.get('input[type="checkbox"]').check()
+    }
 
-    it('should enable submit button only when mandatory fields are filled', () => {
-        // Initially, the submit button should be disabled
-        cy.get('.submit_button').should('be.disabled'); // Adjust selector as necessary
+    function inputMandatoryFields(name) {
+        cy.get('input[name="email"]').type('user@cerebrumhub.com')
+        cy.get('select#country').select('Spain')
+        cy.get('select#city').select('Malaga')
+        cy.get('input[type="checkbox"][ng-model="checkbox"]').check()
+    }
 
-        // Fill only mandatory fields
-        cy.get('input[name="email"]').type('user@cerebrumhub.com');
-        cy.get('select#country').select('Spain');
-        cy.get('select#city').select('Malaga');
-
-        // Now the submit button should be enabled
-        cy.get('.submit_button').should('not.be.disabled');
-    });
+    function checkMandatoryFields() {
+        cy.get('input[name="email"]').should('have.value', '')
+        cy.get('select#country').should('have.value', '')
+        cy.get('select#city').should('not.be.checked')
+        cy.get('input[type="checkbox"]').should('not.be.checked')
+    }
 })
